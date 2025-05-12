@@ -3,6 +3,7 @@ const ErrorResponse = require('../utils/errorResponse');
 const Quiz = require('../models/Quiz');
 const QuizAttempt = require('../models/QuizAttempt');
 const Profile = require('../models/Profile');
+const QuizStatistics = require('../models/QuizStatistics')
 
 // @desc    Create a new quiz
 // @route   POST /api/quizzes
