@@ -1290,4 +1290,4 @@ The API returns standard HTTP error codes with JSON messages:
 
 ## Contact
 
-For issues or clarifications, contact the backend team at \[email@example.com\].
+For issues or clarifications, contact deepakdnayak2004@gmail.com.
