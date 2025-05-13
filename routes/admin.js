@@ -5,7 +5,8 @@ const {
   changeUserRole,
   deleteUser,
   getStudentProgress,
-  getPlatformStatistics
+  getPlatformStatistics,
+  getPendingInstructors
 } = require('../controllers/adminController');
 const { protect, restrictTo } = require('../middleware/auth');
 const router = express.Router();
@@ -16,5 +17,7 @@ router.put('/users/:userId/role', protect, restrictTo('Admin'), changeUserRole);
 router.delete('/users/:userId', protect, restrictTo('Admin'), deleteUser);
 router.get('/students/:userId/progress', protect, restrictTo('Admin'), getStudentProgress);
 router.get('/statistics', protect, restrictTo('Admin'), getPlatformStatistics);
+router.get('/notifications', protect, restrictTo('Admin'), getPendingInstructors);
+
 
 module.exports = router;

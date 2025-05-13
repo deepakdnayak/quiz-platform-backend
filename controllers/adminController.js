@@ -153,11 +153,18 @@ exports.getStudentProgress = asyncHandler(async (req, res, next) => {
   });
 });
 
+
 // @desc    Get platform statistics
 // @route   GET /api/admin/statistics
 // @access  Private (Admin)
 exports.getPlatformStatistics = asyncHandler(async (req, res, next) => {
   const now = new Date();
+
+  // Get user counts
+  const totalUsers = await User.countDocuments();
+  const studentCount = await User.countDocuments({ role: 'Student' });
+  const instructorCount = await User.countDocuments({ role: 'Instructor' });
+  const adminCount = await User.countDocuments({ role: 'Admin' });
 
   // Get total quizzes
   const totalQuizzes = await Quiz.countDocuments();
@@ -168,43 +175,73 @@ exports.getPlatformStatistics = asyncHandler(async (req, res, next) => {
     endTime: { $gte: now }
   });
 
-  // Get stats from QuizStatistics
+  // Get total completions (scored attempts)
+  const totalCompletions = await QuizAttempt.countDocuments({ isScored: true });
+
+  // Get stats from QuizStatistics for average score
   const stats = await QuizStatistics.find();
-  const totalAttempts = stats.reduce((sum, s) => sum + s.totalAttempts, 0);
   const averageScore = stats.length ? stats.reduce((sum, s) => sum + s.averageScore, 0) / stats.length : 0;
 
-  // Get attempts by year
-  const attemptsByYear = await QuizAttempt.aggregate([
-    { $match: { isScored: true } },
+  // Get instructor details
+  const instructorDetails = await User.find({ role: 'Instructor' }).select('_id email status').lean();
+
+  // Get student details with yearOfStudy from Profile
+  const studentDetails = await User.aggregate([
+    { $match: { role: 'Student' } },
     {
       $lookup: {
         from: 'profiles',
-        localField: 'userId',
+        localField: '_id',
         foreignField: 'userId',
         as: 'profile'
       }
     },
-    { $unwind: '$profile' },
-    {
-      $group: {
-        _id: '$profile.yearOfStudy',
-        count: { $sum: 1 }
-      }
-    },
+    { $unwind: { path: '$profile', preserveNullAndEmptyArrays: true } },
     {
       $project: {
-        yearOfStudy: '$_id',
-        count: 1,
+        id: '$_id',
+        email: 1,
+        yearOfStudy: '$profile.yearOfStudy',
         _id: 0
       }
     }
   ]);
 
   res.status(200).json({
+    totalUsers,
+    studentCount,
+    instructorCount,
+    adminCount,
     totalQuizzes,
-    totalAttempts,
-    averageScore,
-    attemptsByYear,
-    activeQuizzes
+    totalCompletions,
+    instructorDetails: instructorDetails.map((instructor) => ({
+      id: instructor._id.toString(),
+      email: instructor.email,
+      status: instructor.status || 'approved' // Default to 'approved' if not set
+    })),
+    studentDetails,
+    activeQuizzes,
+    averageScore
   });
+});
+
+
+// @desc    Get pending instructor approval requests
+// @route   GET /api/admin/notifications
+// @access  Private (Admin)
+exports.getPendingInstructors = asyncHandler(async (req, res, next) => {
+  const pendingInstructors = await User.find({
+    role: 'Instructor',
+    isApproved: null, // Pending instructors have isApproved: null
+  }).select('_id email createdAt').lean();
+
+  const notifications = pendingInstructors.map((instructor) => ({
+    id: instructor._id.toString(),
+    userId: instructor._id.toString(),
+    email: instructor.email,
+    requestedRole: 'Instructor',
+    createdAt: instructor.createdAt,
+  }));
+
+  res.status(200).json(notifications);
 });

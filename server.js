@@ -3,6 +3,7 @@ const dotenv = require('dotenv');
 const morgan = require('morgan');
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/error');
+const cors = require('cors');
 
 // Load environment variables
 dotenv.config({ path: './config/config.env' });
@@ -12,6 +13,14 @@ connectDB();
 
 // Initialize Express app
 const app = express();
+
+// Configure CORS to allow requests from http://localhost:3000
+app.use(cors({
+  origin: 'http://localhost:3000',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true, // If your API uses cookies or auth headers
+}));
 
 // Body parser
 app.use(express.json());
