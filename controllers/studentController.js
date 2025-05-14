@@ -21,11 +21,18 @@ exports.getStudentDashboard = asyncHandler(async (req, res, next) => {
     .select('quizId totalScore createdAt')
     .lean();
 
+  // Get active quizzes
+  const activeQuizzes = await Quiz.find({
+    yearOfStudy: profile.yearOfStudy,
+    startTime: { $lte: now },
+    endTime: { $gte: now }
+  }).select('_id title startTime endTime');
+
   // Get upcoming quizzes
   const upcomingQuizzes = await Quiz.find({
     yearOfStudy: profile.yearOfStudy,
     startTime: { $gt: now }
-  }).select('title startTime');
+  }).select('_id title startTime endTime');
 
   // Calculate average score
   const totalScore = completedQuizzes.reduce((sum, attempt) => sum + attempt.totalScore, 0);
@@ -38,7 +45,18 @@ exports.getStudentDashboard = asyncHandler(async (req, res, next) => {
       totalScore: a.totalScore,
       attemptDate: a.createdAt
     })),
-    upcomingQuizzes,
+    activeQuizzes: activeQuizzes.map(q => ({
+      id: q._id,
+      title: q.title,
+      startTime: q.startTime,
+      endTime: q.endTime
+    })),
+    upcomingQuizzes: upcomingQuizzes.map(q => ({
+      id: q._id,
+      title: q.title,
+      startTime: q.startTime,
+      endTime: q.endTime
+    })),
     averageScore
   });
 });
