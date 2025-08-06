@@ -3,6 +3,8 @@ const ErrorResponse = require('../utils/errorResponse');
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const Profile = require('../models/Profile');
+
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
@@ -29,14 +31,32 @@ exports.register = asyncHandler(async (req, res, next) => {
     email,
     password,
     role: role || 'Student',
-    isApproved: role === 'Instructor' ? false : null
+    isApproved: role === 'Instructor' ? false : null,
+  });
+
+  // Create dummy profile with default values
+  const profile = await Profile.create({
+    userId: user._id,
+    firstName: 'FirstName', // Placeholder default
+    lastName: 'LastName', // Placeholder default
+    yearOfStudy: role === 'Student' ? '1' : null, // Default to '1' for students, null for instructors
+    department: 'General', // Default department
+    rollNumber: '4CB...' | null, // Generate a roll number for students
   });
 
   // Send response
   res.status(201).json({
     userId: user._id,
     email: user.email,
-    role: user.role
+    role: user.role,
+    profile: {
+      profileId: profile._id,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      yearOfStudy: profile.yearOfStudy,
+      department: profile.department,
+      rollNumber: profile.rollNumber,
+    },
   });
 });
 
