@@ -18,7 +18,7 @@ exports.getStudentDashboard = asyncHandler(async (req, res, next) => {
   // Get completed quizzes
   const completedQuizzes = await QuizAttempt.find({ userId: req.user.id, isScored: true })
     .populate('quizId', 'title')
-    .select('quizId totalScore createdAt')
+    .select('quizId totalScore createdAt endTime')
     .lean();
 
   // Get active quizzes
