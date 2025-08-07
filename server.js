@@ -52,3 +52,29 @@ process.on('unhandledRejection', (err, promise) => {
   console.log(`Error: ${err.message}`);
   server.close(() => process.exit(1));
 });
+
+
+// const Profile = require('./models/Profile');
+// const User = require('./models/User');
+
+
+
+// async function updateUsersWithProfile() {
+//   try {
+//     // await mongoose.connect('mongodb://localhost:27017/your_database', {
+//     //   useNewUrlParser: true,
+//     //   useUnifiedTopology: true,
+//     // });
+
+//     const profiles = await Profile.find();
+//     for (const profile of profiles) {
+//       await User.findByIdAndUpdate(profile.userId, { profile: profile._id });
+//     }
+//     console.log('Users updated with profile IDs');
+//     // mongoose.disconnect();
+//   } catch (err) {
+//     console.error('Error updating users:', err);
+//   }
+// }
+
+// updateUsersWithProfile()

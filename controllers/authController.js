@@ -44,6 +44,9 @@ exports.register = asyncHandler(async (req, res, next) => {
     rollNumber: '4CB...' | null, // Generate a roll number for students
   });
 
+  // Update user with profile reference
+  await User.findByIdAndUpdate(user._id, { profile: profile._id }, { new: true });
+
   // Send response
   res.status(201).json({
     userId: user._id,

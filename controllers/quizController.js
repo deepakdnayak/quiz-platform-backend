@@ -337,3 +337,47 @@ exports.getQuizStatistics = asyncHandler(async (req, res, next) => {
 
   res.status(200).json(stats);
 });
+
+
+ 
+// @desc    Get quiz results with student details
+// @route   GET /api/quizzes/:quizId/resultsForInstructor
+// @access  Private (Instructor)
+exports.getQuizResultsForInstructor = asyncHandler(async (req, res, next) => {
+  const { quizId } = req.params;
+
+  // Find quiz and verify ownership
+  const quiz = await Quiz.findById(quizId);
+  if (!quiz) {
+    return next(new ErrorResponse('Quiz not found', 404));
+  }
+  if (quiz.instructorId.toString() !== req.user.id) {
+    return next(new ErrorResponse('Not authorized to view this quiz', 403));
+  }
+
+  // Fetch quiz attempts with student profiles
+  const attempts = await QuizAttempt.find({ quizId, isScored: true })
+    .populate({
+      path: 'userId',
+      select: 'email profile',
+      populate: {
+        path: 'profile',
+        model: 'Profile',
+        select: 'usn firstName lastName yearOfStudy rollNumber',
+      },
+    })
+    .select('totalScore createdAt')
+    .lean();
+
+  const results = attempts.map((attempt) => ({
+    usn: attempt.userId?.profile?.rollNumber || 'N/A',
+    studentName: attempt.userId?.profile
+      ? `${attempt.userId.profile.firstName} ${attempt.userId.profile.lastName}`
+      : 'N/A',
+    score: attempt.totalScore,
+    yearOfStudy: attempt.userId?.profile?.yearOfStudy || 'N/A',
+    attemptDate: attempt.createdAt,
+  }));
+
+  res.status(200).json(results);
+});

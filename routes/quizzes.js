@@ -7,7 +7,8 @@ const {
   getQuizDetails,
   submitQuizAttempt,
   getQuizResults,
-  getQuizStatistics
+  getQuizStatistics,
+  getQuizResultsForInstructor
 } = require('../controllers/quizController');
 const { protect, restrictTo } = require('../middleware/auth');
 const router = express.Router();
@@ -24,5 +25,6 @@ router.route('/:quizId')
 router.post('/:quizId/attempt', protect, restrictTo('Student'), submitQuizAttempt);
 router.get('/:quizId/results', protect, restrictTo('Student'), getQuizResults);
 router.get('/:quizId/statistics', protect, restrictTo('Instructor'), getQuizStatistics);
+router.get('/:quizId/resultsForInstructor',protect, restrictTo('Instructor'), getQuizResultsForInstructor);
 
 module.exports = router;

@@ -43,75 +43,9 @@ exports.getInstructorQuizzes = asyncHandler(async (req, res, next) => {
   res.status(200).json(quizzesWithAttempts);
 });
 
-// @desc    Get quiz statistics
-// @route   GET /api/quizzes/:quizId/statistics
-// @access  Private (Instructor)
-exports.getQuizStatistics = asyncHandler(async (req, res, next) => {
-  const { quizId } = req.params;
-
-  // Find quiz
-  const quiz = await Quiz.findById(quizId);
-  if (!quiz) {
-    return next(new ErrorResponse('Quiz not found', 404));
-  }
-  if (quiz.instructorId.toString() !== req.user.id) {
-    return next(new ErrorResponse('Not authorized to view this quiz', 403));
-  }
-
-  // Check cached statistics
-  let stats = await QuizStatistics.findOne({ quizId });
-  if (!stats) {
-    // Calculate statistics
-    const attempts = await QuizAttempt.find({ quizId, isScored: true });
-    const totalAttempts = attempts.length;
-    const scores = attempts.map(a => a.totalScore);
-    const averageScore = totalAttempts ? scores.reduce((sum, score) => sum + score, 0) / totalAttempts : 0;
-    const highestScore = totalAttempts ? Math.max(...scores) : 0;
-    const lowestScore = totalAttempts ? Math.min(...scores) : 0;
-
-    // Get attempts by year
-    const attemptsByYear = await QuizAttempt.aggregate([
-      { $match: { quizId: quiz._id, isScored: true } },
-      {
-        $lookup: {
-          from: 'profiles',
-          localField: 'userId',
-          foreignField: 'userId',
-          as: 'profile'
-        }
-      },
-      { $unwind: '$profile' },
-      {
-        $group: {
-          _id: '$profile.yearOfStudy',
-          count: { $sum: 1 }
-        }
-      },
-      {
-        $project: {
-          yearOfStudy: '$_id',
-          count: 1,
-          _id: 0
-        }
-      }
-    ]);
-
-    stats = await QuizStatistics.create({
-      quizId,
-      totalAttempts,
-      averageScore,
-      highestScore,
-      lowestScore,
-      attemptsByYear
-    });
-  }
-
-  res.status(200).json(stats);
-});
-
-// @desc    Get instructor dashboard
-// @route   GET /api/instructors/dashboard
-// @access  Private (Instructor)
+// // @desc    Get instructor dashboard
+// // @route   GET /api/instructors/dashboard
+// // @access  Private (Instructor)
 exports.getInstructorDashboard = asyncHandler(async (req, res, next) => {
   const now = new Date();
 

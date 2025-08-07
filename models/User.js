@@ -19,6 +19,11 @@ const UserSchema = new mongoose.Schema({
     enum: ['Student', 'Instructor', 'Admin'],
     default: 'Student'
   },
+  profile: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Profile',
+    unique: true // Ensures one-to-one relationship with Profile
+  },
   isApproved: {
     type: Boolean,
     default: null
