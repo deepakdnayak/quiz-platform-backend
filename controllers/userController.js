@@ -2,6 +2,7 @@ const asyncHandler = require('../middleware/asyncHandler');
 const ErrorResponse = require('../utils/errorResponse');
 const User = require('../models/User');
 const Profile = require('../models/Profile');
+const Quiz = require('../models/Quiz')
 
 // @desc    Get user profile
 // @route   GET /api/users/profile
@@ -51,4 +52,24 @@ exports.updateProfile = asyncHandler(async (req, res, next) => {
   }
 
   res.status(200).json({ profile });
+});
+
+
+exports.userCount = asyncHandler(async (req, res, next) => {
+  // Count total quizzes
+  const totalQuizzes = await Quiz.countDocuments();
+
+  // Count total students (role: 'Student')
+  const totalStudents = await User.countDocuments({ role: 'Student' });
+
+  // Count total instructors (role: 'Instructor')
+  const totalInstructors = await User.countDocuments({ role: 'Instructor' });
+
+  // return NextResponse.json({
+  //   totalQuizzes,
+  //   totalStudents,
+  //   totalInstructors,
+  // });
+
+  res.status(200).json({stats:{ totalQuizzes, totalStudents, totalInstructors} });
 });
