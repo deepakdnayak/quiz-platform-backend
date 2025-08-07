@@ -4,6 +4,8 @@ const Quiz = require('../models/Quiz');
 const QuizAttempt = require('../models/QuizAttempt');
 const Profile = require('../models/Profile');
 const QuizStatistics = require('../models/QuizStatistics')
+const mongoose = require('mongoose');
+
 
 // @desc    Create a new quiz
 // @route   POST /api/quizzes
@@ -272,11 +274,17 @@ exports.getQuizResults = asyncHandler(async (req, res, next) => {
   });
 });
 
+
 // @desc    Get quiz statistics
 // @route   GET /api/quizzes/:quizId/statistics
 // @access  Private (Instructor)
 exports.getQuizStatistics = asyncHandler(async (req, res, next) => {
   const { quizId } = req.params;
+
+  // Validate quizId
+  if (!mongoose.isValidObjectId(quizId)) {
+    return next(new ErrorResponse('Invalid quiz ID', 400));
+  }
 
   // Find quiz
   const quiz = await Quiz.findById(quizId);
@@ -289,50 +297,68 @@ exports.getQuizStatistics = asyncHandler(async (req, res, next) => {
 
   // Check cached statistics
   let stats = await QuizStatistics.findOne({ quizId });
-  if (!stats) {
+  if (!stats || req.query.refresh === 'true') {
+    // Delete existing stats if refresh is requested
+    if (stats && req.query.refresh === 'true') {
+      await QuizStatistics.deleteOne({ quizId });
+    }
+
     // Calculate statistics
-    const attempts = await QuizAttempt.find({ quizId, isScored: true });
+    const attempts = await QuizAttempt.find({ quizId, isScored: true }).lean();
     const totalAttempts = attempts.length;
-    const scores = attempts.map(a => a.totalScore);
-    const averageScore = totalAttempts ? scores.reduce((sum, score) => sum + score, 0) / totalAttempts : 0;
+
+    // Calculate scores
+    const scores = attempts
+      .map(a => Number(a.totalScore))
+      .filter(score => !isNaN(score) && score >= 0);
+    const averageScore = totalAttempts
+      ? Number((scores.reduce((sum, score) => sum + score, 0) / totalAttempts).toFixed(2))
+      : 0;
     const highestScore = totalAttempts ? Math.max(...scores) : 0;
     const lowestScore = totalAttempts ? Math.min(...scores) : 0;
 
     // Get attempts by year
     const attemptsByYear = await QuizAttempt.aggregate([
-      { $match: { quizId: quiz._id, isScored: true } },
+      { $match: { quizId: new mongoose.Types.ObjectId(quizId), isScored: true } },
       {
         $lookup: {
           from: 'profiles',
           localField: 'userId',
           foreignField: 'userId',
-          as: 'profile'
-        }
+          as: 'profile',
+        },
       },
-      { $unwind: '$profile' },
+      { $unwind: { path: '$profile', preserveNullAndEmptyArrays: true } },
       {
         $group: {
           _id: '$profile.yearOfStudy',
-          count: { $sum: 1 }
-        }
+          count: { $sum: 1 },
+        },
       },
       {
         $project: {
           yearOfStudy: '$_id',
           count: 1,
-          _id: 0
-        }
-      }
+          _id: 0,
+        },
+      },
+      { $sort: { yearOfStudy: 1 } }, // Sort by yearOfStudy for consistency
     ]);
 
-    stats = await QuizStatistics.create({
-      quizId,
-      totalAttempts,
-      averageScore,
-      highestScore,
-      lowestScore,
-      attemptsByYear
-    });
+    // Create or update statistics
+    stats = await QuizStatistics.findOneAndUpdate(
+      { quizId },
+      {
+        quizId,
+        totalAttempts,
+        averageScore,
+        highestScore,
+        lowestScore,
+        attemptsByYear: attemptsByYear.length ? attemptsByYear : [],
+        lastUpdated: Date.now(),
+      },
+      { upsert: true, new: true }
+    );
   }
 
   res.status(200).json(stats);
