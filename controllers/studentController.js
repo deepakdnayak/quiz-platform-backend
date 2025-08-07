@@ -17,8 +17,8 @@ exports.getStudentDashboard = asyncHandler(async (req, res, next) => {
 
   // Get completed quizzes
   const completedQuizzes = await QuizAttempt.find({ userId: req.user.id, isScored: true })
-    .populate('quizId', 'title')
-    .select('quizId totalScore createdAt endTime')
+    .populate('quizId', 'title endTime')
+    .select('quizId totalScore createdAt')
     .lean();
 
   // Get active quizzes
@@ -42,6 +42,7 @@ exports.getStudentDashboard = asyncHandler(async (req, res, next) => {
     completedQuizzes: completedQuizzes.map(a => ({
       quizId: a.quizId._id,
       title: a.quizId.title,
+      endTime: a.quizId.endTime,
       totalScore: a.totalScore,
       attemptDate: a.createdAt
     })),
