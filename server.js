@@ -6,7 +6,7 @@ const errorHandler = require('./middleware/error');
 const cors = require('cors');
 
 // Load environment variables
-dotenv.config({ path: './config/config.env' });
+dotenv.config({ path: './config.env' });
 
 // Connect to MongoDB
 connectDB();
