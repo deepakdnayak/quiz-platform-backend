@@ -11,7 +11,7 @@ dotenv.config({ path: './config.env' });
 // Connect to MongoDB
 connectDB();
 
-// Initialize Express app
+// Initialize Express app  https://computerscienceanddesign.vercel.app
 const app = express();
 
 // Configure CORS to allow requests from http://localhost:3000
@@ -24,6 +24,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true, // If your API uses cookies or auth headers
 }));
+app.options('*', cors());
 
 
 // Body parser
