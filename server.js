@@ -16,11 +16,15 @@ const app = express();
 
 // Configure CORS to allow requests from http://localhost:3000
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: [
+    'http://localhost:3000',
+    'https://computerscienceanddesign.vercel.app'
+  ],
   methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true, // If your API uses cookies or auth headers
 }));
+
 
 // Body parser
 app.use(express.json());
