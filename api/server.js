@@ -6,7 +6,7 @@ const errorHandler = require('../middleware/error');
 const cors = require('cors');
 
 // Load environment variables
-dotenv.config({ path: '../config.env' });
+dotenv.config({ path: './config.env' });
 
 // Connect to MongoDB
 connectDB();
@@ -45,5 +45,12 @@ app.use('/api/admin', require('../routes/admin'));
 
 // Error handling middleware
 app.use(errorHandler);
+
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+  });
+}
 
 module.exports = app;
