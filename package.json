@@ -15,6 +15,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^7.8.7",
     "morgan": "^1.10.0",
+    "nodemailer": "^7.0.5",
     "shortid": "^2.2.17"
   },
   "devDependencies": {
