@@ -183,7 +183,7 @@ exports.getPlatformStatistics = asyncHandler(async (req, res, next) => {
   const averageScore = stats.length ? stats.reduce((sum, s) => sum + s.averageScore, 0) / stats.length : 0;
 
   // Get instructor details
-  const instructorDetails = await User.find({ role: 'Instructor' }).select('_id email status').lean();
+  const instructorDetails = await User.find({ role: 'Instructor' }).select('_id email isApproved').lean();
 
   // Get student details with yearOfStudy from Profile
   const studentDetails = await User.aggregate([
@@ -217,7 +217,7 @@ exports.getPlatformStatistics = asyncHandler(async (req, res, next) => {
     instructorDetails: instructorDetails.map((instructor) => ({
       id: instructor._id.toString(),
       email: instructor.email,
-      status: instructor.status || 'approved' // Default to 'approved' if not set
+      status: instructor.isApproved ? 'approved' : 'Not approved' // Default to 'approved' if not set
     })),
     studentDetails,
     activeQuizzes,
@@ -232,7 +232,7 @@ exports.getPlatformStatistics = asyncHandler(async (req, res, next) => {
 exports.getPendingInstructors = asyncHandler(async (req, res, next) => {
   const pendingInstructors = await User.find({
     role: 'Instructor',
-    isApproved: null, // Pending instructors have isApproved: null
+    isApproved: false, // Pending instructors have isApproved: null
   }).select('_id email createdAt').lean();
 
   const notifications = pendingInstructors.map((instructor) => ({

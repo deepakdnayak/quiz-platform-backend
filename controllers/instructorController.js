@@ -3,6 +3,7 @@ const ErrorResponse = require('../utils/errorResponse');
 const Quiz = require('../models/Quiz');
 const QuizAttempt = require('../models/QuizAttempt');
 const QuizStatistics = require('../models/QuizStatistics');
+const User = require('../models/User');
 
 // @desc    Get instructor quizzes
 // @route   GET /api/instructors/quizzes
@@ -65,10 +66,18 @@ exports.getInstructorDashboard = asyncHandler(async (req, res, next) => {
   const averageAttemptsPerQuiz = totalQuizzes ? totalAttempts / totalQuizzes : 0;
   const averageScoreAcrossQuizzes = stats.length ? stats.reduce((sum, s) => sum + s.averageScore, 0) / stats.length : 0;
 
+  // Get user and check isApproved
+  const user = await User.findOne({ _id: req.user.id });
+  if (!user) {
+    return next(new ErrorResponse('Instructor not found', 404));
+  }
+  const isApproved = user.isApproved;
+
   res.status(200).json({
     totalQuizzes,
     activeQuizzes,
     averageAttemptsPerQuiz,
-    averageScoreAcrossQuizzes
+    averageScoreAcrossQuizzes,
+    isApproved
   });
 });

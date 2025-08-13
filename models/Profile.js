@@ -20,7 +20,7 @@ const ProfileSchema = new mongoose.Schema({
   yearOfStudy: {
     type: Number,
     required: [true, 'Please add year of study'],
-    min: 1,
+    min: 0,
     max: 4
   },
   department: {
