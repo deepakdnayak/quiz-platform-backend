@@ -72,12 +72,15 @@ exports.getInstructorDashboard = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse('Instructor not found', 404));
   }
   const isApproved = user.isApproved;
+  const email = user.email;
+
 
   res.status(200).json({
     totalQuizzes,
     activeQuizzes,
     averageAttemptsPerQuiz,
     averageScoreAcrossQuizzes,
-    isApproved
+    isApproved,
+    email
   });
 });
