@@ -31,7 +31,6 @@ const ProfileSchema = new mongoose.Schema({
   rollNumber: {
     type: String,
     required: [true, 'Please add a roll number'],
-    unique: true,
     trim: true
   },
   createdAt: {

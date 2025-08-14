@@ -22,7 +22,6 @@ const UserSchema = new mongoose.Schema({
   profile: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Profile',
-    unique: true // Ensures one-to-one relationship with Profile
   },
   isApproved: {
     type: Boolean,
