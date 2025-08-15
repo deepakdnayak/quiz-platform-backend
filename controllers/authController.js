@@ -41,9 +41,9 @@ exports.register = asyncHandler(async (req, res, next) => {
     userId: user._id,
     firstName: 'FirstName', // Placeholder default
     lastName: 'LastName', // Placeholder default
-    yearOfStudy: role === 'Student' ? '1' : 0, // Default to '1' for students, null for instructors
+    yearOfStudy: 0, // Default to '1' for students, null for instructors
     department: 'CEC', // Default department
-    rollNumber: '4CB...', // Generate a roll number for students
+    rollNumber: '4CB00XX000', // Generate a roll number for students
   });
 
   // Update user with profile reference
