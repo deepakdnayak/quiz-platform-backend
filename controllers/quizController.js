@@ -407,3 +407,44 @@ exports.getQuizResultsForInstructor = asyncHandler(async (req, res, next) => {
 
   res.status(200).json(results);
 });
+
+
+// @desc    Get quiz details for edit
+// @route   GET /api/quizzes/:quizId/edit
+// @access  Private (Instructor)
+exports.getQuizDetailsForEdit = asyncHandler(async (req, res, next) => {
+  const { quizId } = req.params;
+  const profile = await Profile.findOne({ userId: req.user.id });
+  if (!profile) {
+    return next(new ErrorResponse('Profile not found', 404));
+  }
+
+  // Find quiz
+  const quiz = await Quiz.findById(quizId);
+  if (!quiz) {
+    return next(new ErrorResponse('Quiz not found', 404));
+  }
+
+  // Format response (include isCorrect for each option)
+  const formattedQuiz = {
+    quizId: quiz._id,
+    title: quiz.title,
+    description: quiz.description,
+    duration: quiz.duration,
+    startTime: quiz.startTime,
+    endTime: quiz.endTime,
+    yearOfStudy: quiz.yearOfStudy,
+    questions: quiz.questions.map(q => ({
+      questionId: q.questionId,
+      text: q.text,
+      options: q.options.map(o => ({
+        optionId: o.optionId,
+        text: o.text,
+        isCorrect: o.isCorrect   // <-- Added here
+      })),
+      correctOptionIds: q.correctOptionIds,
+    }))
+  };
+
+  res.status(200).json(formattedQuiz);
+});

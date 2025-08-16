@@ -35,8 +35,13 @@ exports.getStudentDashboard = asyncHandler(async (req, res, next) => {
   }).select('_id title startTime endTime');
 
   // Calculate average score
-  const totalScore = completedQuizzes.reduce((sum, attempt) => sum + attempt.totalScore, 0);
-  const averageScore = completedQuizzes.length ? totalScore / completedQuizzes.length : 0;
+  // const totalScore = completedQuizzes.reduce((sum, attempt) => sum + attempt.totalScore, 0);
+  const averageScore = completedQuizzes.length
+  ? completedQuizzes.reduce((sum, attempt) => {
+      return sum + (attempt.totalScore / attempt.quizId.totalScore) * 100;
+    }, 0) / completedQuizzes.length
+  : 0;
+
 
   res.status(200).json({
     completedQuizzes: completedQuizzes.map(a => ({
